@@ -3,8 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Livestock Monitoring Dashboard</title>
-<link rel="stylesheet" href="style.css">
+<title>FarmerFlow </title>
+<link rel="icon" href="https://i.ibb.co/cc12DKrH/Farmer-Flow-1-1.png" type="image/png">
+<style>
+body{
+font-family: Arial, sans-serif;
+background:#f5f6fa;
+margin:0;
+padding:0;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 40px;
+}
+
+.profile-btn{
+background:#1f2a44;
+color:white;
+border:none;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.container{
+width:70%;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:25px;
+border-radius:10px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.status{
+display:flex;
+justify-content:space-between;
+padding:10px;
+border-radius:6px;
+margin-top:10px;
+}
+
+.healthy{
+background:#d4f4dd;
+color:#1e7e34;
+}
+
+.risk{
+background:#fff3cd;
+color:#856404;
+}
+
+.critical{
+background:#f8d7da;
+color:#721c24;
+}
+
+.record{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+}
+
+.btn{
+background:#1f2a44;
+color:white;
+border:none;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+margin-right:10px;
+}
+
+.btn-outline{
+background:white;
+border:1px solid #ccc;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+}
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -239,6 +323,22 @@ document.getElementById('exportExcel').addEventListener('click', exportToExcel);
         top: 0;
         z-index: 1000;
     }
+    .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Adjust spacing between logo and text */
+}
+
+.logo {
+    height: 50px; /* Set your preferred logo height */
+    width: auto;  /* Maintains aspect ratio */
+    object-fit: contain;
+}
+
+/* Optional: Adjust header padding if it feels cramped with the logo */
+header {
+    padding: 15px 40px;
+}
 </style>
 </head>
 <body>
@@ -246,7 +346,10 @@ document.getElementById('exportExcel').addEventListener('click', exportToExcel);
 <div id="alert-banner"></div>
 
 <header>
-  <h1>FarmerFlow Monitoring Dashboard</h1>
+  <div class="logo-container">
+    <img src="https://i.ibb.co/cc12DKrH/Farmer-Flow-1-1.png" alt="FarmerFlow Logo" class="logo">
+    <h1>FarmerFlow Monitoring Dashboard</h1>
+  </div>
   <button class="profile-btn">Profile</button>
 </header>
 
