@@ -1,0 +1,114 @@
+{
+  "livestock": {
+    "cow12": {
+      "id": "cow12",
+      "name": "Cow #12",
+      "species": "Cow",
+      "status": "Healthy",
+      "activity": {
+        "08:00": 40,
+        "12:00": 30,
+        "16:00": 20,
+        "20:00": 35
+      },
+      "vitals": {
+        "temperature": 38.2,
+        "heartRate": 65
+      },
+      "location": "Zone A",
+      "lastUpdate": "2026-03-05T08:00:00"
+    },
+
+    "sheep7": {
+      "id": "sheep7",
+      "name": "Sheep #7",
+      "species": "Sheep",
+      "status": "At Risk",
+      "activity": {
+        "08:00": 30,
+        "12:00": 20,
+        "16:00": 15,
+        "20:00": 25
+      },
+      "vitals": {
+        "temperature": 39.5,
+        "heartRate": 75
+      },
+      "location": "Zone B",
+      "lastUpdate": "2026-03-05T08:00:00"
+    },
+
+    "cow15": {
+      "id": "cow15",
+      "name": "Cow #15",
+      "species": "Cow",
+      "status": "Critical",
+      "activity": {
+        "08:00": 60,
+        "12:00": 55,
+        "16:00": 65,
+        "20:00": 50
+      },
+      "vitals": {
+        "temperature": 40.1,
+        "heartRate": 90
+      },
+      "location": "Zone C",
+      "lastUpdate": "2026-03-05T08:00:00"
+    }
+  },
+
+  "environment": {
+    "temperature": {
+      "08:00": 27,
+      "12:00": 30,
+      "16:00": 32,
+      "20:00": 28
+    },
+
+    "humidity": {
+      "08:00": 75,
+      "12:00": 70,
+      "16:00": 65,
+      "20:00": 80
+    }
+  },
+
+  "alerts": {
+    "alert1": {
+      "animal": "Sheep #7",
+      "type": "High Temperature",
+      "status": "Active",
+      "time": "2026-03-05T12:00:00"
+    },
+
+    "alert2": {
+      "animal": "Cow #15",
+      "type": "Low Activity",
+      "status": "Active",
+      "time": "2026-03-05T16:00:00"
+    }
+  },
+
+  "treatments": {
+    "record1": {
+      "animal": "Cow #12",
+      "treatment": "Vaccination A",
+      "dueDate": "2026-09-10",
+      "status": "Pending"
+    },
+
+    "record2": {
+      "animal": "Sheep #7",
+      "treatment": "Deworming",
+      "dueDate": "2026-09-15",
+      "status": "Pending"
+    },
+
+    "record3": {
+      "animal": "Cow #15",
+      "treatment": "Antibiotics",
+      "status": "Completed"
+    }
+  }
+}

@@ -1,0 +1,82 @@
+body{
+font-family: Arial, sans-serif;
+background:#f5f6fa;
+margin:0;
+padding:0;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 40px;
+}
+
+.profile-btn{
+background:#1f2a44;
+color:white;
+border:none;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.container{
+width:70%;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:25px;
+border-radius:10px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.status{
+display:flex;
+justify-content:space-between;
+padding:10px;
+border-radius:6px;
+margin-top:10px;
+}
+
+.healthy{
+background:#d4f4dd;
+color:#1e7e34;
+}
+
+.risk{
+background:#fff3cd;
+color:#856404;
+}
+
+.critical{
+background:#f8d7da;
+color:#721c24;
+}
+
+.record{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+}
+
+.btn{
+background:#1f2a44;
+color:white;
+border:none;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+margin-right:10px;
+}
+
+.btn-outline{
+background:white;
+border:1px solid #ccc;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+}

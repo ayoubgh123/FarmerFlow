@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Livestock Monitoring Dashboard</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCM0H10wCLPALb5hg4UfNjrQx94QgvBWpA",
+  authDomain: "livestock-monitor-ba87b.firebaseapp.com",
+  databaseURL: "https://livestock-monitor-ba87b-default-rtdb.firebaseio.com/",
+  projectId: "livestock-monitor-ba87b",
+  storageBucket: "livestock-monitor-ba87b.appspot.com",
+  messagingSenderId: "1005114027856",
+  appId: "1:1005114027856:web:a3437c80e4109deb0bc655",
+  measurementId: "G-K3HK2923W6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+signInAnonymously(auth)
+  .then(() => {
+    console.log("✅ AUTH SUCCESS");
+    startMonitoring(); 
+  })
+  .catch((err) => console.error("❌ AUTH ERROR", err));
+
+function startMonitoring() {
+  // --- LIVESTOCK DATA ---
+  onValue(ref(db, 'livestock'), (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    const labels = [], activities = [];
+    const healthList = document.querySelector('.health-list');
+    healthList.innerHTML = "";
+
+    snapshot.forEach((child) => {
+      const val = child.val();
+      const name = val.name || "Animal";
+      const div = document.createElement('div');
+      div.className = `status ${(val.status || "healthy").toLowerCase()}`;
+      div.innerHTML = `<span>${name}</span><span>${val.status || 'Healthy'} ●</span>`;
+      healthList.appendChild(div);
+
+      const activityObj = val.activity || {};
+      const activityKeys = Object.keys(activityObj);
+      const latestActivity = activityKeys.length > 0 ? activityObj[activityKeys[activityKeys.length - 1]] : 0;
+      labels.push(name);
+      activities.push(latestActivity);
+    });
+    updateActivityChart(labels, activities);
+  });
+
+  // --- ENVIRONMENT DATA ---
+  onValue(ref(db, 'environment'), (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    const timeLabels = Object.keys(data.temperature || {});
+    const tempValues = Object.values(data.temperature || {});
+    const humValues = Object.values(data.humidity || {});
+    updateEnvChart(timeLabels, tempValues, humValues);
+  });
+
+  // --- TREATMENT RECORDS (Now inside startMonitoring) ---
+  const treatRef = ref(db, 'treatments'); 
+  onValue(treatRef, (snapshot) => {
+    const listContainer = document.getElementById('treatment-list');
+    listContainer.innerHTML = ''; // Clear only the list, keep the Card H2
+    
+    const data = snapshot.val();
+    if (!data) {
+        listContainer.innerHTML = '<p style="padding:10px; color:gray;">No records.</p>';
+        return;
+    }
+
+    snapshot.forEach((child) => {
+      const val = child.val();
+      const div = document.createElement('div');
+      div.className = 'record';
+      const animalName = val.animal || val.name || child.key;
+      const treatmentType = val.treatment || val.type || "Checkup";
+      const date = val.date || "Recent";
+      const status = val.status || "Completed";
+
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%; border-bottom:1px solid #eee; padding:8px 0;">
+            <span><strong>${animalName}</strong>: ${treatmentType}</span>
+            <span style="font-size:0.8em; color:#666;">${status} (${date})</span>
+        </div>
+      `;
+      listContainer.appendChild(div);
+    });
+  });
+}
+
+// Chart Helper Functions
+function updateActivityChart(labels, data) {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    if (window.activityChart instanceof Chart) window.activityChart.destroy();
+    window.activityChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Activity', data: data, backgroundColor: '#36A2EB' }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function updateEnvChart(labels, temps, hums) {
+    const ctx = document.getElementById('envChart').getContext('2d');
+    if (window.envChart instanceof Chart) window.envChart.destroy();
+    window.envChart = new Chart(ctx, {
+        type: 'line',
+        data: { 
+            labels: labels, 
+            datasets: [
+                { label: 'Temp (°C)', data: temps, borderColor: 'red', fill: false },
+                { label: 'Humidity (%)', data: hums, borderColor: 'blue', fill: false }
+            ] 
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+// --- REPORT GENERATION FUNCTIONS ---
+
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. Title & Header
+    doc.setFontSize(20);
+    doc.text("Livestock Analytics Report", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+
+    // 2. Capture Charts as Images
+    const activityCanvas = document.getElementById('activityChart');
+    const envCanvas = document.getElementById('envChart');
+    
+    const activityImg = activityCanvas.toDataURL("image/png", 1.0);
+    const envImg = envCanvas.toDataURL("image/png", 1.0);
+
+    // 3. Add Activity Chart to PDF
+    doc.setFontSize(14);
+    doc.text("Activity Patterns", 14, 40);
+    doc.addImage(activityImg, 'PNG', 14, 45, 180, 60); // (image, type, x, y, width, height)
+
+    // 4. Add Environmental Chart to PDF
+    doc.text("Environmental Conditions (Temp/Humidity)", 14, 115);
+    doc.addImage(envImg, 'PNG', 14, 120, 180, 60);
+
+    // 5. Add Treatment Table at the bottom or new page
+    doc.addPage();
+    doc.text("Detailed Treatment Records", 14, 20);
+    
+    const rows = [];
+    document.querySelectorAll('#treatment-list .record').forEach(rec => {
+        rows.push([rec.innerText.split(':')[0], rec.innerText.split(':')[1]]);
+    });
+
+    doc.autoTable({
+        startY: 30,
+        head: [['Animal', 'Treatment Details']],
+        body: rows,
+    });
+
+    doc.save("Livestock_Full_Report.pdf");
+}
+// 2. Excel Generation
+function exportToExcel() {
+    const workbook = XLSX.utils.book_new();
+
+    // --- Sheet 1: Treatment Records ---
+    const treatmentData = [["Animal", "Details"]];
+    document.querySelectorAll('#treatment-list .record').forEach(rec => {
+        treatmentData.push([rec.innerText.split(':')[0], rec.innerText.split(':')[1]]);
+    });
+    const ws1 = XLSX.utils.aoa_to_sheet(treatmentData);
+    XLSX.utils.book_append_sheet(workbook, ws1, "Treatments");
+
+    // --- Sheet 2: Environment Data (The Line Chart Data) ---
+    // We pull this directly from the global Chart object
+    const envChart = window.envChart;
+    const envData = [["Time", "Temperature (C)", "Humidity (%)"]];
+    
+    envChart.data.labels.forEach((label, index) => {
+        envData.push([
+            label, 
+            envChart.data.datasets[0].data[index], 
+            envChart.data.datasets[1].data[index]
+        ]);
+    });
+    const ws2 = XLSX.utils.aoa_to_sheet(envData);
+    XLSX.utils.book_append_sheet(workbook, ws2, "Environmental Trends");
+
+    // --- Sheet 3: Activity Data (The Bar Chart Data) ---
+    const actChart = window.activityChart;
+    const actData = [["Animal Name", "Activity Level"]];
+    actChart.data.labels.forEach((label, index) => {
+        actData.push([label, actChart.data.datasets[0].data[index]]);
+    });
+    const ws3 = XLSX.utils.aoa_to_sheet(actData);
+    XLSX.utils.book_append_sheet(workbook, ws3, "Activity Levels");
+
+    XLSX.writeFile(workbook, "Livestock_Data_Export.xlsx");
+}
+// Attach listeners (Put this inside startMonitoring or at the end of your script)
+document.getElementById('downloadPDF').addEventListener('click', generatePDF);
+document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+</script>
+
+
+<style>
+    /* Ensure charts have room to breathe */
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+    #alert-banner {
+        display: none;
+        background: #ff4d4d;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+</style>
+</head>
+<body>
+
+<div id="alert-banner"></div>
+
+<header>
+  <h1>FarmerFlow Monitoring Dashboard</h1>
+  <button class="profile-btn">Profile</button>
+</header>
+
+<div class="container">
+  <section class="card">
+    <h2>Livestock Health Status</h2>
+    <div class="health-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>Activity Patterns</h2>
+    <div class="chart-container">
+        <canvas id="activityChart"></canvas>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Environmental Conditions</h2>
+    <div class="chart-container">
+        <canvas id="envChart"></canvas>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Treatment Records</h2>
+    <div id="treatment-list"></div>
+  </section>
+  <!-- Reports -->
+<section class="card">
+    <h2>Reports & Analytics</h2>
+    <p>Disease Pattern Report (Monthly)</p>
+    <button id="downloadPDF" class="btn">Download PDF</button>
+    <button id="exportExcel" class="btn-outline">Export Excel</button>
+</section>
+</div>
+
+</body>
+</html>
